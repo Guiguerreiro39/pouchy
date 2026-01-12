@@ -131,7 +131,12 @@ function DashboardContent() {
       {/* Dashboard Content */}
       <div className="flex-1 space-y-6 p-4 lg:p-6">
         <div className="flex items-center justify-between">
-          <h1 className="font-bold text-2xl tracking-tight">Dashboard</h1>
+          <div>
+            <h1 className="font-bold text-2xl tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground text-sm">
+              Your financial overview at a glance
+            </p>
+          </div>
           <p className="text-muted-foreground text-sm">Last 30 days</p>
         </div>
 

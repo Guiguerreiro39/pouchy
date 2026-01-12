@@ -129,7 +129,7 @@ function SubscriptionsContent() {
         <div>
           <h1 className="font-bold text-2xl tracking-tight">Subscriptions</h1>
           <p className="text-muted-foreground text-sm">
-            Track your recurring payments
+            Track and manage your recurring payments
           </p>
         </div>
         <CreateSubscriptionDialog accounts={accounts} categories={categories} />

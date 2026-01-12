@@ -190,7 +190,7 @@ function TransactionsContent() {
         <div>
           <h1 className="font-bold text-2xl tracking-tight">Transactions</h1>
           <p className="text-muted-foreground text-sm">
-            View and manage your transactions
+            View, filter, and manage all your transactions
           </p>
         </div>
         <CreateTransactionDialog accounts={accounts} categories={categories} />

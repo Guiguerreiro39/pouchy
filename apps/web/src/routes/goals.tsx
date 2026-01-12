@@ -101,7 +101,7 @@ function GoalsContent() {
         <div>
           <h1 className="font-bold text-2xl tracking-tight">Goals</h1>
           <p className="text-muted-foreground text-sm">
-            Track your financial goals
+            Set and track your savings targets
           </p>
         </div>
         <CreateGoalDialog />

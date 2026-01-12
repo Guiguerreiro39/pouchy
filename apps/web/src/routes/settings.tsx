@@ -144,7 +144,7 @@ function SettingsContent() {
       <div>
         <h1 className="font-bold text-2xl tracking-tight">Settings</h1>
         <p className="text-muted-foreground text-sm">
-          Manage your preferences and account settings
+          Customize your preferences and notifications
         </p>
       </div>
 

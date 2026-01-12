@@ -132,7 +132,7 @@ function AccountsContent() {
         <div>
           <h1 className="font-bold text-2xl tracking-tight">Accounts</h1>
           <p className="text-muted-foreground text-sm">
-            Manage your financial accounts
+            Manage your bank accounts, cards, and wallets
           </p>
         </div>
         <CreateAccountDialog />

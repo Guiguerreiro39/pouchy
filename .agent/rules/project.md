@@ -7,6 +7,10 @@ globs: **/*.{ts,tsx,js,jsx,json,jsonc,html,vue,svelte,astro,css,yaml,yml,graphql
 
 This is a typescript project that uses tanstack start, convex and effect.
 
+## Development mode
+
+- Use http://localhost:3001 to access the application
+
 ## Project Structure
 
 This is a monorepo with the following structure:
@@ -47,7 +51,14 @@ Authentication is enabled in this project. Use convex authentication functions i
 Topics include: services and layers, data modeling, error handling, configuration, testing, HTTP clients, CLIs, observability, and project structure.
 
 **Effect Source Reference:** `~/.local/share/effect`
+**Effect Atom Source Reference:** `~/.local/share/effect-atom`
 Search here to explore APIs, find usage examples, and understand implementation details when the documentation isn't enough.
+
+### Error handling
+
+- Check the TaggedErrors in /packages/backend/convex/schemas/errors.ts for the possible errors.
+- Never throw inside an effect, always Effect.fail with the appropriate error.
+- When using Convex, always check for errors and handle them gracefully.
 
 ## Documentation
 
@@ -59,7 +70,7 @@ Search here to explore APIs, find usage examples, and understand implementation 
 
 ## Frontend
 
-- Use shadcn/ui for UI components
+- Use shadcn/ui with BaseUI for UI components
 - Use TailwindCSS for styling
 - Use Effect Atom for global state management
 

@@ -91,7 +91,7 @@ export const create = mutation({
           }
         }
 
-        return yield* Effect.tryPromise({
+        const goalId = yield* Effect.tryPromise({
           try: () =>
             ctx.db.insert("goals", {
               userId: user.subject,
@@ -107,6 +107,21 @@ export const create = mutation({
             }),
           catch: (error) => new UnknownError({ error }),
         });
+
+        yield* Effect.tryPromise({
+          try: () =>
+            ctx.db.insert("activities", {
+              userId: user.subject,
+              type: "create_goal",
+              entityId: goalId,
+              entityType: "goal",
+              description: `Created goal ${args.name}`,
+              timestamp: Date.now(),
+            }),
+          catch: (error) => new UnknownError({ error }),
+        });
+
+        return goalId;
       })
     ),
 });
@@ -258,6 +273,19 @@ export const remove = mutation({
         yield* Effect.tryPromise({
           try: () => ctx.db.delete(args.id),
           catch: (error) => new UnknownError({ error, docId: args.id }),
+        });
+
+        yield* Effect.tryPromise({
+          try: () =>
+            ctx.db.insert("activities", {
+              userId: user.subject,
+              type: "delete_goal",
+              entityId: args.id,
+              entityType: "goal",
+              description: `Deleted goal ${goal.name}`,
+              timestamp: Date.now(),
+            }),
+          catch: (error) => new UnknownError({ error }),
         });
 
         return null;

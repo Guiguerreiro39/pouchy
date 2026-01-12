@@ -114,7 +114,7 @@ function InvestmentsContent() {
         <div>
           <h1 className="font-bold text-2xl tracking-tight">Investments</h1>
           <p className="text-muted-foreground text-sm">
-            Track your investment portfolio
+            Monitor your portfolio performance
           </p>
         </div>
         <CreateInvestmentDialog />

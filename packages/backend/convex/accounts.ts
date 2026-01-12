@@ -82,7 +82,7 @@ export const create = mutation({
       Effect.gen(function* () {
         const user = yield* Policies.orFail(Policies.requireSignedIn);
 
-        return yield* Effect.tryPromise({
+        const accountId = yield* Effect.tryPromise({
           try: () =>
             ctx.db.insert("accounts", {
               userId: user.subject,
@@ -96,6 +96,21 @@ export const create = mutation({
             }),
           catch: (error) => new UnknownError({ error }),
         });
+
+        yield* Effect.tryPromise({
+          try: () =>
+            ctx.db.insert("activities", {
+              userId: user.subject,
+              type: "create_account",
+              entityId: accountId,
+              entityType: "account",
+              description: `Created account ${args.name}`,
+              timestamp: Date.now(),
+            }),
+          catch: (error) => new UnknownError({ error }),
+        });
+
+        return accountId;
       })
     ),
 });
@@ -302,6 +317,19 @@ export const remove = mutation({
             catch: (error) => new UnknownError({ error, docId: args.id }),
           });
         }
+
+        yield* Effect.tryPromise({
+          try: () =>
+            ctx.db.insert("activities", {
+              userId: user.subject,
+              type: "delete_account",
+              entityId: args.id,
+              entityType: "account",
+              description: `Deleted account ${account.name}`,
+              timestamp: Date.now(),
+            }),
+          catch: (error) => new UnknownError({ error }),
+        });
 
         return null;
       })

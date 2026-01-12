@@ -166,6 +166,17 @@ export const Notification = {
   relatedId: v.optional(v.string()), // ID of related entity
 };
 
+// ============ ACTIVITY FEED ============
+export const Activity = {
+  userId: v.string(),
+  type: v.string(), // e.g. "create_account", "delete_transaction"
+  entityId: v.string(),
+  entityType: v.string(), // "account", "transaction", "investment"
+  description: v.string(),
+  timestamp: v.number(),
+  metadata: v.optional(v.any()),
+};
+
 export const confectSchema = defineSchema({
   userProfiles: defineTable(UserProfile).index("by_userId", ["userId"]),
 
@@ -211,6 +222,8 @@ export const confectSchema = defineSchema({
   notifications: defineTable(Notification)
     .index("by_userId", ["userId"])
     .index("by_userId_unread", ["userId", "isRead"]),
+
+  activities: defineTable(Activity).index("by_userId", ["userId"]),
 });
 
 export default confectSchema;

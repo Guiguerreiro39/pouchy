@@ -1,0 +1,106 @@
+import { Link, useLocation } from "@tanstack/react-router";
+import { Home } from "lucide-react";
+
+import { ActivityPopover } from "@/components/activity-feed";
+import { NotificationPopover } from "@/components/notification-popover";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+
+// Map of routes to their display names
+const ROUTE_NAMES: Record<string, string> = {
+  dashboard: "Dashboard",
+  transactions: "Transactions",
+  accounts: "Accounts",
+  goals: "Goals",
+  investments: "Investments",
+  subscriptions: "Subscriptions",
+  settings: "Settings",
+};
+
+interface BreadcrumbSegment {
+  name: string;
+  path: string;
+  isCurrentPage: boolean;
+}
+
+function getBreadcrumbs(pathname: string): BreadcrumbSegment[] {
+  const segments: BreadcrumbSegment[] = [];
+
+  // Handle root path
+  if (pathname === "/" || pathname === "/dashboard") {
+    return [{ name: "Dashboard", path: "/dashboard", isCurrentPage: true }];
+  }
+
+  // Split path and filter empty segments
+  const pathParts = pathname.split("/").filter(Boolean);
+
+  // Build breadcrumb segments
+  let currentPath = "";
+  pathParts.forEach((part, index) => {
+    currentPath += `/${part}`;
+    const isLast = index === pathParts.length - 1;
+    const name =
+      ROUTE_NAMES[part] || part.charAt(0).toUpperCase() + part.slice(1);
+
+    segments.push({
+      name,
+      path: currentPath,
+      isCurrentPage: isLast,
+    });
+  });
+
+  return segments;
+}
+
+export function Navbar() {
+  const location = useLocation();
+  const breadcrumbs = getBreadcrumbs(location.pathname);
+
+  return (
+    <header className="flex h-14 items-center gap-4 border-b bg-background px-6">
+      <div className="flex flex-1 items-center gap-2">
+        <Breadcrumb>
+          <BreadcrumbList>
+            {/* Home icon link - always shown for non-dashboard pages */}
+            {breadcrumbs[0]?.path !== "/dashboard" && (
+              <>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link to="/dashboard">
+                      <Home className="h-4 w-4" />
+                    </Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+              </>
+            )}
+
+            {/* Breadcrumb segments */}
+            {breadcrumbs.map((segment, index) => (
+              <BreadcrumbItem key={segment.path}>
+                {index > 0 && <BreadcrumbSeparator />}
+                {segment.isCurrentPage ? (
+                  <BreadcrumbPage>{segment.name}</BreadcrumbPage>
+                ) : (
+                  <BreadcrumbLink asChild>
+                    <Link to={segment.path}>{segment.name}</Link>
+                  </BreadcrumbLink>
+                )}
+              </BreadcrumbItem>
+            ))}
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+      <div className="flex items-center gap-2">
+        <NotificationPopover />
+        <ActivityPopover />
+      </div>
+    </header>
+  );
+}

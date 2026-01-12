@@ -109,7 +109,7 @@ export const create = mutation({
           args.frequency
         );
 
-        return yield* Effect.tryPromise({
+        const subscriptionId = yield* Effect.tryPromise({
           try: () =>
             ctx.db.insert("subscriptions", {
               userId: user.subject,
@@ -128,6 +128,21 @@ export const create = mutation({
             }),
           catch: (error) => new UnknownError({ error }),
         });
+
+        yield* Effect.tryPromise({
+          try: () =>
+            ctx.db.insert("activities", {
+              userId: user.subject,
+              type: "create_subscription",
+              entityId: subscriptionId,
+              entityType: "subscription",
+              description: `Created subscription ${args.name}`,
+              timestamp: Date.now(),
+            }),
+          catch: (error) => new UnknownError({ error }),
+        });
+
+        return subscriptionId;
       })
     ),
 });

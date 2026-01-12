@@ -11,11 +11,10 @@ import {
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
 import { Authenticated } from "convex/react";
-
+import { Navbar } from "@/components/navbar";
 import { Toaster } from "@/components/ui/sonner";
 import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
-
 import Sidebar from "../components/sidebar";
 import appCss from "../index.css?url";
 
@@ -83,8 +82,11 @@ function RootDocument() {
               <Authenticated>
                 <Sidebar />
               </Authenticated>
-              <main className="flex-1 overflow-auto">
-                <Outlet />
+              <main className="flex flex-1 flex-col overflow-hidden">
+                <Navbar />
+                <div className="flex-1 overflow-auto">
+                  <Outlet />
+                </div>
               </main>
             </div>
             <Toaster richColors />

@@ -122,6 +122,19 @@ export const create = mutation({
           catch: (error) => new UnknownError({ error }),
         });
 
+        yield* Effect.tryPromise({
+          try: () =>
+            ctx.db.insert("activities", {
+              userId: user.subject,
+              type: "create_investment",
+              entityId: investmentId,
+              entityType: "investment",
+              description: `Created investment ${args.name}`,
+              timestamp: Date.now(),
+            }),
+          catch: (error) => new UnknownError({ error }),
+        });
+
         return investmentId;
       })
     ),
@@ -243,6 +256,24 @@ export const remove = mutation({
         yield* Effect.tryPromise({
           try: () => ctx.db.delete(args.id),
           catch: (error) => new UnknownError({ error, docId: args.id }),
+        });
+
+        yield* Effect.tryPromise({
+          try: () => ctx.db.delete(args.id),
+          catch: (error) => new UnknownError({ error, docId: args.id }),
+        });
+
+        yield* Effect.tryPromise({
+          try: () =>
+            ctx.db.insert("activities", {
+              userId: user.subject,
+              type: "delete_investment",
+              entityId: args.id,
+              entityType: "investment",
+              description: `Deleted investment ${investment.name}`,
+              timestamp: Date.now(),
+            }),
+          catch: (error) => new UnknownError({ error }),
         });
 
         return null;

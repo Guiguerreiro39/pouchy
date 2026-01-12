@@ -100,9 +100,13 @@ function RouteComponent() {
 }
 
 function InvestmentsContent() {
-  const portfolio = useQuery(api.investments.getPortfolioSummary);
+  const settings = useQuery(api.userSettings.getOrCreate);
+  const portfolio = useQuery(
+    api.investments.getPortfolioSummary,
+    settings ? { baseCurrency: settings.baseCurrency } : "skip"
+  );
 
-  if (!portfolio) {
+  if (!(portfolio && settings)) {
     return <InvestmentsSkeleton />;
   }
 
@@ -129,10 +133,11 @@ function InvestmentsContent() {
           </CardHeader>
           <CardContent>
             <div className="font-bold text-2xl">
-              {formatCurrency(portfolio.totalValue)}
+              {formatCurrency(portfolio.totalValue, settings.baseCurrency)}
             </div>
             <p className="text-muted-foreground text-xs">
-              Cost basis: {formatCurrency(portfolio.totalCost)}
+              Cost basis:{" "}
+              {formatCurrency(portfolio.totalCost, settings.baseCurrency)}
             </p>
           </CardContent>
         </Card>
@@ -153,7 +158,7 @@ function InvestmentsContent() {
               className={`font-bold text-2xl ${isPositive ? "text-green-500" : "text-red-500"}`}
             >
               {isPositive ? "+" : ""}
-              {formatCurrency(portfolio.totalGain)}
+              {formatCurrency(portfolio.totalGain, settings.baseCurrency)}
             </div>
             <p
               className={`text-xs ${isPositive ? "text-green-500" : "text-red-500"}`}
@@ -218,6 +223,7 @@ function InvestmentItem({
     value: number;
     gain: number;
     gainPercent: number;
+    currency: string;
   };
 }) {
   const removeInvestment = useMutation(api.investments.remove);
@@ -254,7 +260,7 @@ function InvestmentItem({
             </Badge>
           </div>
           <p className="text-muted-foreground text-sm">
-            {formatCurrency(investment.value)}
+            {formatCurrency(investment.value, investment.currency)}
           </p>
         </div>
       </div>
@@ -264,7 +270,7 @@ function InvestmentItem({
             className={`font-medium ${isPositive ? "text-green-500" : "text-red-500"}`}
           >
             {isPositive ? "+" : ""}
-            {formatCurrency(investment.gain)}
+            {formatCurrency(investment.gain, investment.currency)}
           </p>
           <p
             className={`text-sm ${isPositive ? "text-green-500" : "text-red-500"}`}
@@ -320,6 +326,17 @@ const InvestmentFormSchema = Schema.Struct({
   ),
 });
 
+const CURRENCIES = [
+  { value: "USD", label: "USD - US Dollar" },
+  { value: "EUR", label: "EUR - Euro" },
+  { value: "GBP", label: "GBP - British Pound" },
+  { value: "JPY", label: "JPY - Japanese Yen" },
+  { value: "CAD", label: "CAD - Canadian Dollar" },
+  { value: "AUD", label: "AUD - Australian Dollar" },
+  { value: "CHF", label: "CHF - Swiss Franc" },
+  { value: "BRL", label: "BRL - Brazilian Real" },
+] as const;
+
 function CreateInvestmentDialog({ children }: { children?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const createInvestment = useMutation(api.investments.create);
@@ -327,18 +344,12 @@ function CreateInvestmentDialog({ children }: { children?: React.ReactNode }) {
   const form = useForm({
     defaultValues: {
       name: "",
-      type: "stock" as
-        | "stock"
-        | "etf"
-        | "crypto"
-        | "mutual_fund"
-        | "bond"
-        | "real_estate"
-        | "other",
+      type: "stock" as const,
       symbol: "",
       quantity: "",
       purchasePrice: "",
       currentPrice: "",
+      currency: "USD",
       purchaseDate: new Date().toISOString().split("T")[0],
     },
     onSubmit: async ({ value }) => {
@@ -352,7 +363,7 @@ function CreateInvestmentDialog({ children }: { children?: React.ReactNode }) {
           currentPrice: value.currentPrice
             ? Number.parseFloat(value.currentPrice)
             : undefined,
-          currency: "USD",
+          currency: value.currency,
           purchaseDate: new Date(value.purchaseDate).getTime(),
         });
         toast.success("Investment added");
@@ -434,44 +445,72 @@ function CreateInvestmentDialog({ children }: { children?: React.ReactNode }) {
             </form.Field>
           </div>
 
-          <form.Field name="type">
-            {(field) => (
-              <div className="space-y-2">
-                <Label htmlFor="type">Type</Label>
-                <Select
-                  items={INVESTMENT_TYPES.map((t) => ({
-                    value: t.value,
-                    label: t.label,
-                  }))}
-                  onValueChange={(val: string | null) =>
-                    val &&
-                    field.handleChange(
-                      val as
-                        | "stock"
-                        | "etf"
-                        | "crypto"
-                        | "mutual_fund"
-                        | "bond"
-                        | "real_estate"
-                        | "other"
-                    )
-                  }
-                  value={field.state.value}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select investment type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {INVESTMENT_TYPES.map((t) => (
-                      <SelectItem key={t.value} value={t.value}>
-                        {t.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </form.Field>
+          <div className="grid grid-cols-2 gap-4">
+            <form.Field name="type">
+              {(field) => (
+                <div className="space-y-2">
+                  <Label htmlFor="type">Type</Label>
+                  <Select
+                    items={INVESTMENT_TYPES.map((t) => ({
+                      value: t.value,
+                      label: t.label,
+                    }))}
+                    onValueChange={(val: string | null) =>
+                      val &&
+                      field.handleChange(
+                        val as
+                          | "stock"
+                          | "etf"
+                          | "crypto"
+                          | "mutual_fund"
+                          | "bond"
+                          | "real_estate"
+                          | "other"
+                      )
+                    }
+                    value={field.state.value}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select investment type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {INVESTMENT_TYPES.map((t) => (
+                        <SelectItem key={t.value} value={t.value}>
+                          {t.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </form.Field>
+
+            <form.Field name="currency">
+              {(field) => (
+                <div className="space-y-2">
+                  <Label htmlFor="currency">Currency</Label>
+                  <Select
+                    items={CURRENCIES}
+                    onValueChange={(val: string | null) =>
+                      val && field.handleChange(val)
+                    }
+                    value={field.state.value}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CURRENCIES.map((c) => (
+                        <SelectItem key={c.value} value={c.value}>
+                          {c.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </form.Field>
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <form.Field name="quantity">

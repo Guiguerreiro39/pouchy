@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { Effect } from "effect";
 import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
+import { convertCurrency } from "./lib/currency";
 import { Policies } from "./lib/policies";
 import { runWithEffect } from "./lib/runtime";
 import { NotFoundError, UnknownError } from "./schemas/errors";
@@ -337,15 +338,16 @@ export const remove = mutation({
 });
 
 export const getTotalBalance = query({
-  args: { currency: v.optional(v.string()) },
+  args: { baseCurrency: v.optional(v.string()) },
   handler: (
     ctx,
-    _args
+    args
   ): Promise<{ total: number; byCurrency: Record<string, number> }> =>
     runWithEffect(
       ctx,
       Effect.gen(function* () {
         const user = yield* Policies.orFail(Policies.requireSignedIn);
+        const baseCurrency = args.baseCurrency ?? "USD";
 
         const accounts = yield* Effect.tryPromise({
           try: () =>
@@ -364,7 +366,14 @@ export const getTotalBalance = query({
         for (const account of accounts) {
           byCurrency[account.currency] =
             (byCurrency[account.currency] || 0) + account.balance;
-          total += account.balance; // Note: This sums without conversion
+
+          const converted = yield* convertCurrency(
+            ctx,
+            account.balance,
+            account.currency,
+            baseCurrency
+          );
+          total += converted;
         }
 
         return { total, byCurrency };

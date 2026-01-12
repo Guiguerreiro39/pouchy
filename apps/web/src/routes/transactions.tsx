@@ -196,33 +196,6 @@ function TransactionsContent() {
         <CreateTransactionDialog accounts={accounts} categories={categories} />
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="flex flex-wrap items-center gap-4 pt-6">
-          <div className="relative flex-1">
-            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              className="pl-9"
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search transactions..."
-              value={searchQuery}
-            />
-          </div>
-          <Tabs
-            onValueChange={(v) => setFilter(v as typeof filter)}
-            value={filter}
-          >
-            <TabsList>
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="expense">Expenses</TabsTrigger>
-              <TabsTrigger value="income">Income</TabsTrigger>
-              <TabsTrigger value="transfer">Transfers</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </CardContent>
-      </Card>
-
-      {/* Transactions Table */}
       <Card>
         <CardHeader>
           <CardTitle>Transaction History</CardTitle>
@@ -231,6 +204,28 @@ function TransactionsContent() {
               ? `${transactionCount} transactions`
               : "Loading..."}
           </CardDescription>
+          <div className="flex flex-wrap items-center gap-4 pt-4">
+            <div className="relative flex-1">
+              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                className="pl-9"
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search transactions..."
+                value={searchQuery}
+              />
+            </div>
+            <Tabs
+              onValueChange={(v) => setFilter(v as typeof filter)}
+              value={filter}
+            >
+              <TabsList>
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="expense">Expenses</TabsTrigger>
+                <TabsTrigger value="income">Income</TabsTrigger>
+                <TabsTrigger value="transfer">Transfers</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
         </CardHeader>
         <CardContent>
           {!filteredTransactions && <TransactionsTableSkeleton />}

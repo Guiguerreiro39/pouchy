@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { Effect } from "effect";
 import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
+import { convertCurrency } from "./lib/currency";
 import { startOfDay } from "./lib/dates";
 import { Policies } from "./lib/policies";
 import { runWithEffect } from "./lib/runtime";
@@ -310,8 +311,12 @@ export const getSnapshots = query({
 });
 
 export const getPortfolioSummary = query({
+  args: {
+    baseCurrency: v.optional(v.string()),
+  },
   handler: (
-    ctx
+    ctx,
+    args
   ): Promise<{
     totalValue: number;
     totalCost: number;
@@ -324,12 +329,14 @@ export const getPortfolioSummary = query({
       value: number;
       gain: number;
       gainPercent: number;
+      currency: string;
     }>;
   }> =>
     runWithEffect(
       ctx,
       Effect.gen(function* () {
         const user = yield* Policies.orFail(Policies.requireSignedIn);
+        const baseCurrency = args.baseCurrency ?? "USD";
 
         const investments = yield* Effect.tryPromise({
           try: () =>
@@ -343,24 +350,44 @@ export const getPortfolioSummary = query({
         let totalValue = 0;
         let totalCost = 0;
 
-        const details = investments.map((inv) => {
-          const value = inv.currentPrice * inv.quantity;
-          const cost = inv.purchasePrice * inv.quantity;
-          const gain = value - cost;
-          const gainPercent = cost > 0 ? (gain / cost) * 100 : 0;
+        const details = yield* Effect.forEach(investments, (inv) =>
+          Effect.gen(function* () {
+            // Raw values in investment's currency
+            const valueRaw = inv.currentPrice * inv.quantity;
+            const costRaw = inv.purchasePrice * inv.quantity;
+            const gainRaw = valueRaw - costRaw;
+            const gainPercentRaw = costRaw > 0 ? (gainRaw / costRaw) * 100 : 0;
 
-          totalValue += value;
-          totalCost += cost;
+            // Converted values for total portfolio calculation
+            const valueConverted = yield* convertCurrency(
+              ctx,
+              valueRaw,
+              inv.currency,
+              baseCurrency
+            );
+            const costConverted = yield* convertCurrency(
+              ctx,
+              costRaw,
+              inv.currency,
+              baseCurrency
+            );
 
-          return {
-            id: inv._id,
-            name: inv.name,
-            type: inv.type,
-            value,
-            gain,
-            gainPercent: Math.round(gainPercent * 100) / 100,
-          };
-        });
+            // Accumulate totals
+            totalValue += valueConverted;
+            totalCost += costConverted;
+
+            return {
+              id: inv._id,
+              name: inv.name,
+              type: inv.type,
+              value: valueRaw, // Return raw value
+              gain: gainRaw, // Return raw gain
+              gainPercent: Math.round(gainPercentRaw * 100) / 100,
+              currency: inv.currency,
+              convertedValue: valueConverted, // Used for sorting
+            };
+          })
+        );
 
         const totalGain = totalValue - totalCost;
         const gainPercent = totalCost > 0 ? (totalGain / totalCost) * 100 : 0;
@@ -370,7 +397,18 @@ export const getPortfolioSummary = query({
           totalCost: Math.round(totalCost * 100) / 100,
           totalGain: Math.round(totalGain * 100) / 100,
           gainPercent: Math.round(gainPercent * 100) / 100,
-          investments: details.sort((a, b) => b.value - a.value),
+          investments: details
+            .map(({ convertedValue, ...rest }) => rest)
+            .sort((a, b) => {
+              // Sort by converted value to keep meaningful order across currencies
+              const aConverted = details.find(
+                (d) => d.id === a.id
+              )?.convertedValue;
+              const bConverted = details.find(
+                (d) => d.id === b.id
+              )?.convertedValue;
+              return (bConverted ?? 0) - (aConverted ?? 0);
+            }),
         };
       })
     ),

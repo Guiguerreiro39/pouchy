@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { Effect } from "effect";
 import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
+import { convertCurrency } from "./lib/currency";
 import { calculateNextRenewalDate } from "./lib/dates";
 import { Policies } from "./lib/policies";
 import { runWithEffect } from "./lib/runtime";
@@ -361,11 +362,15 @@ export const getUpcoming = query({
 });
 
 export const getTotalMonthly = query({
-  handler: (ctx): Promise<number> =>
+  args: {
+    baseCurrency: v.optional(v.string()),
+  },
+  handler: (ctx, args): Promise<number> =>
     runWithEffect(
       ctx,
       Effect.gen(function* () {
         const user = yield* Policies.orFail(Policies.requireSignedIn);
+        const baseCurrency = args.baseCurrency ?? "USD";
 
         const subscriptions = yield* Effect.tryPromise({
           try: () =>
@@ -381,25 +386,37 @@ export const getTotalMonthly = query({
         // Convert all to monthly equivalent
         let total = 0;
         for (const sub of subscriptions) {
+          let monthlyAmount = sub.amount;
           switch (sub.frequency) {
             case "daily":
-              total += sub.amount * 30;
+              monthlyAmount = sub.amount * 30;
               break;
             case "weekly":
-              total += sub.amount * 4.33;
+              monthlyAmount = sub.amount * 4.33;
               break;
             case "monthly":
-              total += sub.amount;
+              monthlyAmount = sub.amount;
               break;
             case "quarterly":
-              total += sub.amount / 3;
+              monthlyAmount = sub.amount / 3;
               break;
             case "yearly":
-              total += sub.amount / 12;
+              monthlyAmount = sub.amount / 12;
               break;
             default:
               // Unknown frequency, skip
+              monthlyAmount = 0;
               break;
+          }
+
+          if (monthlyAmount > 0) {
+            const converted = yield* convertCurrency(
+              ctx,
+              monthlyAmount,
+              sub.currency,
+              baseCurrency
+            );
+            total += converted;
           }
         }
 

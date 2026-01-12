@@ -108,13 +108,17 @@ function RouteComponent() {
 }
 
 function SubscriptionsContent() {
+  const settings = useQuery(api.userSettings.getOrCreate);
   const subscriptions = useQuery(api.subscriptions.list, {});
-  const totalMonthly = useQuery(api.subscriptions.getTotalMonthly);
+  const totalMonthly = useQuery(
+    api.subscriptions.getTotalMonthly,
+    settings ? { baseCurrency: settings.baseCurrency } : "skip"
+  );
   const accounts = useQuery(api.accounts.list, {});
   const categories = useQuery(api.categories.list);
 
   if (
-    !(subscriptions && accounts && categories) ||
+    !(subscriptions && accounts && categories && settings) ||
     totalMonthly === undefined
   ) {
     return <SubscriptionsSkeleton />;
@@ -144,7 +148,7 @@ function SubscriptionsContent() {
           </CardHeader>
           <CardContent>
             <div className="font-bold text-2xl">
-              {formatCurrency(totalMonthly)}
+              {formatCurrency(totalMonthly, settings.baseCurrency)}
             </div>
             <p className="text-muted-foreground text-xs">per month</p>
           </CardContent>

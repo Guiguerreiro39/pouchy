@@ -113,18 +113,22 @@ function RouteComponent() {
 
 function AccountsContent() {
   const [showArchived, setShowArchived] = useState(false);
+  const settings = useQuery(api.userSettings.getOrCreate);
   const accounts = useQuery(api.accounts.list, {
     includeArchived: showArchived,
   });
-  const settings = useQuery(api.userSettings.getOrCreate);
+  const balanceData = useQuery(
+    api.accounts.getTotalBalance,
+    settings ? { baseCurrency: settings.baseCurrency } : "skip"
+  );
 
-  if (!(accounts && settings)) {
+  if (!(accounts && settings && balanceData)) {
     return <AccountsSkeleton />;
   }
 
   const activeAccounts = accounts.filter((a) => !a.isArchived);
   const archivedAccounts = accounts.filter((a) => a.isArchived);
-  const totalBalance = activeAccounts.reduce((sum, a) => sum + a.balance, 0);
+  const totalBalance = balanceData.total;
 
   return (
     <div className="flex-1 space-y-6 p-4 lg:p-6">

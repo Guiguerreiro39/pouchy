@@ -139,7 +139,6 @@ export const update = mutation({
   handler: (ctx, args): Promise<null> =>
     runWithEffect(
       ctx,
-      // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complexity needed
       Effect.gen(function* () {
         const user = yield* Policies.orFail(Policies.requireSignedIn);
 

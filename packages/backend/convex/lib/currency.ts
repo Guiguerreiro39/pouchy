@@ -1,5 +1,5 @@
 import type { GenericQueryCtx } from "convex/server";
-import { Effect } from "effect";
+import { Console, Effect } from "effect";
 import type { DataModel } from "../_generated/dataModel";
 
 // Fallback rates when no exchange rate data is available (rates relative to USD)
@@ -40,6 +40,9 @@ export const getExchangeRate = (
     );
 
     if (directRate) {
+      Console.log(
+        `Found direct rate for ${fromCurrency}->${toCurrency}: ${directRate.rate}`
+      );
       return directRate.rate;
     }
 
@@ -54,30 +57,44 @@ export const getExchangeRate = (
     );
 
     if (reverseRate) {
+      Console.log(
+        `Found reverse rate for ${fromCurrency}->${toCurrency}: ${1 / reverseRate.rate}`
+      );
       return 1 / reverseRate.rate;
     }
 
     // Use USD as intermediate currency
-    const fromUSD = yield* Effect.tryPromise(() =>
-      ctx.db
-        .query("exchangeRates")
-        .withIndex("by_currencies", (q) =>
-          q.eq("baseCurrency", "USD").eq("targetCurrency", fromCurrency)
-        )
-        .first()
-    );
+    // Treat 'USD' as having a rate of 1 to itself to avoid DB lookup failure
+    const fromUSDRate =
+      fromCurrency === "USD"
+        ? 1
+        : (yield* Effect.tryPromise(() =>
+            ctx.db
+              .query("exchangeRates")
+              .withIndex("by_currencies", (q) =>
+                q.eq("baseCurrency", "USD").eq("targetCurrency", fromCurrency)
+              )
+              .first()
+          ))?.rate;
 
-    const toUSD = yield* Effect.tryPromise(() =>
-      ctx.db
-        .query("exchangeRates")
-        .withIndex("by_currencies", (q) =>
-          q.eq("baseCurrency", "USD").eq("targetCurrency", toCurrency)
-        )
-        .first()
-    );
+    const toUSDRate =
+      toCurrency === "USD"
+        ? 1
+        : (yield* Effect.tryPromise(() =>
+            ctx.db
+              .query("exchangeRates")
+              .withIndex("by_currencies", (q) =>
+                q.eq("baseCurrency", "USD").eq("targetCurrency", toCurrency)
+              )
+              .first()
+          ))?.rate;
 
-    if (fromUSD && toUSD) {
-      return toUSD.rate / fromUSD.rate;
+    if (fromUSDRate && toUSDRate) {
+      const rate = toUSDRate / fromUSDRate;
+      Console.log(
+        `Calculated intermediate rate for ${fromCurrency}->${toCurrency}: ${rate}`
+      );
+      return rate;
     }
 
     // Fallback to hardcoded rates
@@ -85,9 +102,14 @@ export const getExchangeRate = (
     const toFallback = FALLBACK_RATES[toCurrency];
 
     if (fromFallback && toFallback) {
-      return toFallback / fromFallback;
+      const rate = toFallback / fromFallback;
+      Console.log(
+        `Using fallback rate for ${fromCurrency}->${toCurrency}: ${rate}`
+      );
+      return rate;
     }
 
+    Console.warn(`No exchange rate found for ${fromCurrency} -> ${toCurrency}`);
     // No conversion available, return 1
     return 1;
   });

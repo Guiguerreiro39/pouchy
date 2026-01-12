@@ -11,7 +11,6 @@ import { calculateNextRenewalDate, startOfDay } from "./lib/dates";
  * - Sends notifications
  */
 export const processSubscriptionRenewals = internalMutation({
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Complexity needed
   handler: async (ctx) => {
     const now = Date.now();
 

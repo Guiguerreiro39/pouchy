@@ -60,6 +60,11 @@ Search here to explore APIs, find usage examples, and understand implementation 
 - Never throw inside an effect, always Effect.fail with the appropriate error.
 - When using Convex, always check for errors and handle them gracefully.
 
+### Logging
+
+- Use Console from effect instead of console
+- Do a concise but valuable logging on each endpoint
+
 ## Documentation
 
 - Use context7 mcp for up to date documentation.

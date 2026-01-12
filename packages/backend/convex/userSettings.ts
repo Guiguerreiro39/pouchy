@@ -11,6 +11,8 @@ const DEFAULT_SETTINGS = {
   notificationsEnabled: true,
   emailNotifications: false,
   dashboardDateRange: 30,
+  onboardingCompleted: false,
+  onboardingStep: 0,
 };
 
 export const get = query({
@@ -70,6 +72,8 @@ export const update = mutation({
     notificationsEnabled: v.optional(v.boolean()),
     emailNotifications: v.optional(v.boolean()),
     dashboardDateRange: v.optional(v.number()),
+    onboardingCompleted: v.optional(v.boolean()),
+    onboardingStep: v.optional(v.number()),
   },
   handler: (ctx, args): Promise<Id<"userSettings">> =>
     runWithEffect(
@@ -106,6 +110,12 @@ export const update = mutation({
                 ...(args.dashboardDateRange !== undefined && {
                   dashboardDateRange: args.dashboardDateRange,
                 }),
+                ...(args.onboardingCompleted !== undefined && {
+                  onboardingCompleted: args.onboardingCompleted,
+                }),
+                ...(args.onboardingStep !== undefined && {
+                  onboardingStep: args.onboardingStep,
+                }),
               }),
             catch: (error) => new UnknownError({ error }),
           });
@@ -127,6 +137,11 @@ export const update = mutation({
                 args.emailNotifications ?? DEFAULT_SETTINGS.emailNotifications,
               dashboardDateRange:
                 args.dashboardDateRange ?? DEFAULT_SETTINGS.dashboardDateRange,
+              onboardingCompleted:
+                args.onboardingCompleted ??
+                DEFAULT_SETTINGS.onboardingCompleted,
+              onboardingStep:
+                args.onboardingStep ?? DEFAULT_SETTINGS.onboardingStep,
             }),
           catch: (error) => new UnknownError({ error }),
         });
@@ -166,6 +181,8 @@ export const setBaseCurrency = mutation({
                 notificationsEnabled: DEFAULT_SETTINGS.notificationsEnabled,
                 emailNotifications: DEFAULT_SETTINGS.emailNotifications,
                 dashboardDateRange: DEFAULT_SETTINGS.dashboardDateRange,
+                onboardingCompleted: DEFAULT_SETTINGS.onboardingCompleted,
+                onboardingStep: DEFAULT_SETTINGS.onboardingStep,
               }),
             catch: (error) => new UnknownError({ error }),
           });
@@ -219,6 +236,8 @@ export const setDefaultAccount = mutation({
                 notificationsEnabled: DEFAULT_SETTINGS.notificationsEnabled,
                 emailNotifications: DEFAULT_SETTINGS.emailNotifications,
                 dashboardDateRange: DEFAULT_SETTINGS.dashboardDateRange,
+                onboardingCompleted: DEFAULT_SETTINGS.onboardingCompleted,
+                onboardingStep: DEFAULT_SETTINGS.onboardingStep,
               }),
             catch: (error) => new UnknownError({ error }),
           });

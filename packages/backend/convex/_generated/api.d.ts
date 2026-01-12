@@ -25,6 +25,7 @@ import type * as lib_dates from "../lib/dates.js";
 import type * as lib_policies from "../lib/policies.js";
 import type * as lib_runtime from "../lib/runtime.js";
 import type * as lib_subscriptions from "../lib/subscriptions.js";
+import type * as migrations_001_migrate_onboarding_fields from "../migrations/001_migrate_onboarding_fields.js";
 import type * as notifications from "../notifications.js";
 import type * as schemas_auth from "../schemas/auth.js";
 import type * as schemas_errors from "../schemas/errors.js";
@@ -57,6 +58,7 @@ declare const fullApi: ApiFromModules<{
   "lib/policies": typeof lib_policies;
   "lib/runtime": typeof lib_runtime;
   "lib/subscriptions": typeof lib_subscriptions;
+  "migrations/001_migrate_onboarding_fields": typeof migrations_001_migrate_onboarding_fields;
   notifications: typeof notifications;
   "schemas/auth": typeof schemas_auth;
   "schemas/errors": typeof schemas_errors;

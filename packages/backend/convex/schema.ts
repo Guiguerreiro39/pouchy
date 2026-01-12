@@ -146,6 +146,8 @@ export const UserSettings = {
   notificationsEnabled: v.boolean(),
   emailNotifications: v.boolean(),
   dashboardDateRange: v.number(), // Days to show on dashboard (default 30)
+  onboardingCompleted: v.boolean(),
+  onboardingStep: v.number(), // Current step in onboarding wizard (0-4)
 };
 
 // ============ NOTIFICATIONS ============

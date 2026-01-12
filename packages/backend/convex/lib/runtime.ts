@@ -2,11 +2,10 @@ import type { GenericMutationCtx, GenericQueryCtx } from "convex/server";
 import { ConvexError } from "convex/values";
 import { Effect, Layer, Logger, LogLevel, ManagedRuntime } from "effect";
 
-import type { DataModel } from "@/_generated/dataModel";
-import { CurrentSession } from "@/lib/currentSession";
-import type { ForbiddenError, NotFoundError } from "@/schemas/errors";
+import type { DataModel } from "../_generated/dataModel";
+import type { ForbiddenError, NotFoundError } from "../schemas/errors";
 import { parseCurrentConvexEnvironment } from "./constants";
-import { fetchCurrentSession } from "./currentSession";
+import { CurrentSession, fetchCurrentSession } from "./currentSession";
 
 const MINIMUM_LOG_LEVEL = (() => {
   const environment = parseCurrentConvexEnvironment();

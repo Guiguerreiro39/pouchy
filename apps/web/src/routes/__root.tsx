@@ -10,12 +10,13 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
+import { Authenticated } from "convex/react";
 
 import { Toaster } from "@/components/ui/sonner";
 import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
 
-import Header from "../components/header";
+import Sidebar from "../components/sidebar";
 import appCss from "../index.css?url";
 
 const getAuth = createServerFn({ method: "GET" }).handler(async () => {
@@ -38,7 +39,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "My App",
+        title: "Pouchy - Personal Finance",
       },
     ],
     links: [
@@ -72,14 +73,19 @@ function RootDocument() {
       initialToken={context.token ?? null}
     >
       <QueryClientProvider client={context.queryClient}>
-        <html className="dark" lang="en">
+        <html lang="en">
           <head>
             <HeadContent />
           </head>
           <body>
-            <div className="grid h-svh grid-rows-[auto_1fr]">
-              <Header />
-              <Outlet />
+            <div className="flex h-svh">
+              {/* Only show sidebar when authenticated, avoiding the "useless sidebar" on login */}
+              <Authenticated>
+                <Sidebar />
+              </Authenticated>
+              <main className="flex-1 overflow-auto">
+                <Outlet />
+              </main>
             </div>
             <Toaster richColors />
             <TanStackRouterDevtools position="bottom-left" />

@@ -25,7 +25,10 @@
   "linter": {
     "rules": {
       "style": {
-        "useFilenamingConvention": "warn"
+        "useFilenamingConvention": "off"
+      },
+      "suspicious": {
+        "noArrayIndexKey": "off"
       }
     }
   },

@@ -40,7 +40,7 @@ export const getExchangeRate = (
     );
 
     if (directRate) {
-      Console.log(
+      yield* Console.log(
         `Found direct rate for ${fromCurrency}->${toCurrency}: ${directRate.rate}`
       );
       return directRate.rate;
@@ -57,7 +57,7 @@ export const getExchangeRate = (
     );
 
     if (reverseRate) {
-      Console.log(
+      yield* Console.log(
         `Found reverse rate for ${fromCurrency}->${toCurrency}: ${1 / reverseRate.rate}`
       );
       return 1 / reverseRate.rate;
@@ -91,7 +91,7 @@ export const getExchangeRate = (
 
     if (fromUSDRate && toUSDRate) {
       const rate = toUSDRate / fromUSDRate;
-      Console.log(
+      yield* Console.log(
         `Calculated intermediate rate for ${fromCurrency}->${toCurrency}: ${rate}`
       );
       return rate;
@@ -103,13 +103,15 @@ export const getExchangeRate = (
 
     if (fromFallback && toFallback) {
       const rate = toFallback / fromFallback;
-      Console.log(
+      yield* Console.log(
         `Using fallback rate for ${fromCurrency}->${toCurrency}: ${rate}`
       );
       return rate;
     }
 
-    Console.warn(`No exchange rate found for ${fromCurrency} -> ${toCurrency}`);
+    yield* Console.warn(
+      `No exchange rate found for ${fromCurrency} -> ${toCurrency}`
+    );
     // No conversion available, return 1
     return 1;
   });

@@ -1,9 +1,12 @@
+import { convexQuery } from "@convex-dev/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@tanstack-effect-convex/backend/convex/_generated/api";
 import type { Id } from "@tanstack-effect-convex/backend/convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { STALE_TIME } from "@/lib/query";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -47,7 +50,10 @@ const COLOR_OPTIONS = [
 ];
 
 export default function StepCategories() {
-  const categories = useQuery(api.categories.list);
+  const { data: categories } = useQuery({
+    ...convexQuery(api.categories.list, {}),
+    staleTime: STALE_TIME.STATIC,
+  });
   const createCategory = useMutation(api.categories.create);
   const removeCategory = useMutation(api.categories.remove);
 
@@ -140,11 +146,15 @@ export default function StepCategories() {
           <div className="space-y-2">
             <Label htmlFor="cat-type">Type</Label>
             <Select
+              items={[
+                { value: "expense", label: "Expense" },
+                { value: "income", label: "Income" },
+              ]}
               onValueChange={(v) => setType(v as "expense" | "income")}
               value={type}
             >
-              <SelectTrigger id="cat-type">
-                <SelectValue />
+              <SelectTrigger className="w-full" id="cat-type">
+                <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="expense">Expense</SelectItem>

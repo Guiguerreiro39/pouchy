@@ -1,6 +1,8 @@
+import { convexQuery } from "@convex-dev/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@tanstack-effect-convex/backend/convex/_generated/api";
-import { useQuery } from "convex/react";
 import { CheckCircle2 } from "lucide-react";
+import { STALE_TIME } from "@/lib/query";
 import { Button } from "../ui/button";
 
 interface StepCompleteProps {
@@ -12,9 +14,18 @@ export default function StepComplete({
   onNext,
   onPrevious,
 }: StepCompleteProps) {
-  const accounts = useQuery(api.accounts.list, {});
-  const categories = useQuery(api.categories.list);
-  const transactions = useQuery(api.transactions.list, {});
+  const { data: accounts } = useQuery({
+    ...convexQuery(api.accounts.list, {}),
+    staleTime: STALE_TIME.SEMI_STATIC,
+  });
+  const { data: categories } = useQuery({
+    ...convexQuery(api.categories.list, {}),
+    staleTime: STALE_TIME.STATIC,
+  });
+  const { data: transactions } = useQuery({
+    ...convexQuery(api.transactions.list, {}),
+    staleTime: STALE_TIME.DYNAMIC,
+  });
 
   const accountCount = accounts?.length || 0;
   const categoryCount = categories?.length || 0;

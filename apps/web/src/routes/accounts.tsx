@@ -1,4 +1,6 @@
+import { convexQuery } from "@convex-dev/react-query";
 import { useForm } from "@tanstack/react-form";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { api } from "@tanstack-effect-convex/backend/convex/_generated/api";
 import type { Doc } from "@tanstack-effect-convex/backend/convex/_generated/dataModel";
@@ -7,7 +9,6 @@ import {
   AuthLoading,
   Unauthenticated,
   useMutation,
-  useQuery,
 } from "convex/react";
 import { Schema } from "effect";
 import {
@@ -61,9 +62,11 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/format";
+import { STALE_TIME } from "@/lib/query";
 
 export const Route = createFileRoute("/accounts")({
   component: RouteComponent,
+  pendingComponent: AccountsSkeleton,
 });
 
 const ACCOUNT_TYPES = [
@@ -113,14 +116,23 @@ function RouteComponent() {
 
 function AccountsContent() {
   const [showArchived, setShowArchived] = useState(false);
-  const settings = useQuery(api.userSettings.getOrCreate);
-  const accounts = useQuery(api.accounts.list, {
-    includeArchived: showArchived,
+  const { data: settings } = useQuery({
+    ...convexQuery(api.userSettings.getOrCreate, {}),
+    staleTime: STALE_TIME.STATIC,
   });
-  const balanceData = useQuery(
-    api.accounts.getTotalBalance,
-    settings ? { baseCurrency: settings.baseCurrency } : "skip"
-  );
+  const { data: accounts } = useQuery({
+    ...convexQuery(api.accounts.list, {
+      includeArchived: showArchived,
+    }),
+    staleTime: STALE_TIME.SEMI_STATIC,
+  });
+  const { data: balanceData } = useQuery({
+    ...convexQuery(
+      api.accounts.getTotalBalance,
+      settings ? { baseCurrency: settings.baseCurrency } : "skip"
+    ),
+    staleTime: STALE_TIME.SEMI_STATIC,
+  });
 
   if (!(accounts && settings && balanceData)) {
     return <AccountsSkeleton />;
@@ -415,7 +427,7 @@ function CreateAccountDialog({ children }: { children?: React.ReactNode }) {
                   }
                   value={field.state.value}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select account type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -441,7 +453,7 @@ function CreateAccountDialog({ children }: { children?: React.ReactNode }) {
                   }
                   value={field.state.value}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select currency" />
                   </SelectTrigger>
                   <SelectContent>

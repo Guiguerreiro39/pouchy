@@ -1,9 +1,12 @@
+import { convexQuery } from "@convex-dev/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@tanstack-effect-convex/backend/convex/_generated/api";
 import type { Id } from "@tanstack-effect-convex/backend/convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { STALE_TIME } from "@/lib/query";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -31,7 +34,10 @@ const CURRENCIES = [
 ] as const;
 
 export default function StepAccounts() {
-  const accounts = useQuery(api.accounts.list, {});
+  const { data: accounts } = useQuery({
+    ...convexQuery(api.accounts.list, {}),
+    staleTime: STALE_TIME.SEMI_STATIC,
+  });
   const createAccount = useMutation(api.accounts.create);
   const removeAccount = useMutation(api.accounts.remove);
 
@@ -103,11 +109,15 @@ export default function StepAccounts() {
           <div className="space-y-2">
             <Label htmlFor="account-type">Type</Label>
             <Select
+              items={ACCOUNT_TYPES.map((t) => ({
+                value: t.value,
+                label: t.label,
+              }))}
               onValueChange={(value) => value && setType(value)}
               value={type}
             >
-              <SelectTrigger id="account-type">
-                <SelectValue />
+              <SelectTrigger className="w-full" id="account-type">
+                <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
                 {ACCOUNT_TYPES.map((t) => (
@@ -122,11 +132,15 @@ export default function StepAccounts() {
           <div className="space-y-2">
             <Label htmlFor="account-currency">Currency</Label>
             <Select
+              items={CURRENCIES.map((c) => ({
+                value: c.value,
+                label: c.label,
+              }))}
               onValueChange={(value) => value && setCurrency(value)}
               value={currency}
             >
-              <SelectTrigger id="account-currency">
-                <SelectValue />
+              <SelectTrigger className="w-full" id="account-currency">
+                <SelectValue placeholder="Select currency" />
               </SelectTrigger>
               <SelectContent>
                 {CURRENCIES.map((c) => (

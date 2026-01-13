@@ -1,9 +1,12 @@
+import { convexQuery } from "@convex-dev/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@tanstack-effect-convex/backend/convex/_generated/api";
 import type { Id } from "@tanstack-effect-convex/backend/convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { STALE_TIME } from "@/lib/query";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -16,9 +19,18 @@ import {
 } from "../ui/select";
 
 export default function StepTransactions() {
-  const accounts = useQuery(api.accounts.list, {});
-  const categories = useQuery(api.categories.list);
-  const transactions = useQuery(api.transactions.list, {});
+  const { data: accounts } = useQuery({
+    ...convexQuery(api.accounts.list, {}),
+    staleTime: STALE_TIME.SEMI_STATIC,
+  });
+  const { data: categories } = useQuery({
+    ...convexQuery(api.categories.list, {}),
+    staleTime: STALE_TIME.STATIC,
+  });
+  const { data: transactions } = useQuery({
+    ...convexQuery(api.transactions.list, {}),
+    staleTime: STALE_TIME.DYNAMIC,
+  });
   const createTransaction = useMutation(api.transactions.create);
   const removeTransaction = useMutation(api.transactions.remove);
 
@@ -93,10 +105,14 @@ export default function StepTransactions() {
           <div className="space-y-2">
             <Label htmlFor="tx-account">Account</Label>
             <Select
+              items={accounts?.map((acc) => ({
+                value: acc._id,
+                label: acc.name,
+              }))}
               onValueChange={(value) => value && setAccountId(value)}
               value={accountId}
             >
-              <SelectTrigger id="tx-account">
+              <SelectTrigger className="w-full" id="tx-account">
                 <SelectValue placeholder="Select account" />
               </SelectTrigger>
               <SelectContent>
@@ -112,15 +128,23 @@ export default function StepTransactions() {
           <div className="space-y-2">
             <Label htmlFor="tx-category">Category</Label>
             <Select
+              items={categories?.map((cat) => ({
+                value: cat._id,
+                label: `${cat.icon} ${cat.name}`,
+              }))}
               onValueChange={(value) => value && setCategoryId(value)}
               value={categoryId}
             >
-              <SelectTrigger id="tx-category">
+              <SelectTrigger className="w-full" id="tx-category">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
                 {categories?.map((cat) => (
-                  <SelectItem key={cat._id} value={cat._id}>
+                  <SelectItem
+                    key={cat._id}
+                    label={`${cat.icon} ${cat.name}`}
+                    value={cat._id}
+                  >
                     {cat.icon} {cat.name}
                   </SelectItem>
                 ))}
@@ -131,11 +155,15 @@ export default function StepTransactions() {
           <div className="space-y-2">
             <Label htmlFor="tx-type">Type</Label>
             <Select
+              items={[
+                { value: "expense", label: "Expense" },
+                { value: "income", label: "Income" },
+              ]}
               onValueChange={(v) => setType(v as "expense" | "income")}
               value={type}
             >
-              <SelectTrigger id="tx-type">
-                <SelectValue />
+              <SelectTrigger className="w-full" id="tx-type">
+                <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="expense">Expense</SelectItem>

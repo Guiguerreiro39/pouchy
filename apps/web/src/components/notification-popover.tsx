@@ -1,6 +1,8 @@
+import { convexQuery } from "@convex-dev/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@tanstack-effect-convex/backend/convex/_generated/api";
 import type { Doc } from "@tanstack-effect-convex/backend/convex/_generated/dataModel";
-import { useMutation, useQuery } from "convex/react";
+import { useMutation } from "convex/react";
 import {
   AlertCircle,
   Bell,
@@ -20,6 +22,7 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatRelativeDate } from "@/lib/format";
+import { STALE_TIME } from "@/lib/query";
 
 type NotificationType = Doc<"notifications">["type"];
 
@@ -50,8 +53,14 @@ function getNotificationColor(type: NotificationType): string {
 }
 
 export function NotificationPopover() {
-  const notifications = useQuery(api.notifications.list, {});
-  const unreadCount = useQuery(api.notifications.getUnreadCount);
+  const { data: notifications } = useQuery({
+    ...convexQuery(api.notifications.list, {}),
+    staleTime: STALE_TIME.DYNAMIC,
+  });
+  const { data: unreadCount } = useQuery({
+    ...convexQuery(api.notifications.getUnreadCount, {}),
+    staleTime: STALE_TIME.DYNAMIC,
+  });
   const markAsRead = useMutation(api.notifications.markAsRead);
   const markAllAsRead = useMutation(api.notifications.markAllAsRead);
   const removeNotification = useMutation(api.notifications.remove);

@@ -1,3 +1,5 @@
+import { convexQuery } from "@convex-dev/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { api } from "@tanstack-effect-convex/backend/convex/_generated/api";
 import {
@@ -5,7 +7,6 @@ import {
   AuthLoading,
   Unauthenticated,
   useMutation,
-  useQuery,
 } from "convex/react";
 import {
   ArrowDownRight,
@@ -29,6 +30,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDate, formatPercent } from "@/lib/format";
+import { STALE_TIME } from "@/lib/query";
 
 type TransactionType = "income" | "expense" | "transfer";
 
@@ -62,6 +64,7 @@ function TransactionIcon({ type }: { type: TransactionType }) {
 
 export const Route = createFileRoute("/dashboard")({
   component: RouteComponent,
+  pendingComponent: DashboardSkeleton,
 });
 
 function RouteComponent() {
@@ -85,11 +88,17 @@ function RouteComponent() {
 }
 
 function DashboardContent() {
-  const settings = useQuery(api.userSettings.getOrCreate);
-  const summary = useQuery(
-    api.dashboard.getSummary,
-    settings ? { days: 30, baseCurrency: settings.baseCurrency } : "skip"
-  );
+  const { data: settings } = useQuery({
+    ...convexQuery(api.userSettings.getOrCreate, {}),
+    staleTime: STALE_TIME.STATIC,
+  });
+  const { data: summary } = useQuery({
+    ...convexQuery(
+      api.dashboard.getSummary,
+      settings ? { days: 30, baseCurrency: settings.baseCurrency } : "skip"
+    ),
+    staleTime: STALE_TIME.DYNAMIC,
+  });
   const seedCategories = useMutation(api.categories.seedDefaultCategories);
   const [showOnboarding, setShowOnboarding] = useState(false);
 

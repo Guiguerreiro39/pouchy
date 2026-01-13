@@ -1,4 +1,6 @@
+import { convexQuery } from "@convex-dev/react-query";
 import { useForm } from "@tanstack/react-form";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { api } from "@tanstack-effect-convex/backend/convex/_generated/api";
 import type { Id } from "@tanstack-effect-convex/backend/convex/_generated/dataModel";
@@ -7,7 +9,6 @@ import {
   AuthLoading,
   Unauthenticated,
   useMutation,
-  useQuery,
 } from "convex/react";
 import { Schema } from "effect";
 import { Check, MoreHorizontal, Plus, Target, Trash2 } from "lucide-react";
@@ -45,9 +46,11 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDate, formatPercent } from "@/lib/format";
+import { STALE_TIME } from "@/lib/query";
 
 export const Route = createFileRoute("/goals")({
   component: RouteComponent,
+  pendingComponent: GoalsSkeleton,
 });
 
 function RouteComponent() {
@@ -78,7 +81,10 @@ function RouteComponent() {
 
 function GoalsContent() {
   const [showCompleted, setShowCompleted] = useState(false);
-  const goals = useQuery(api.goals.list, { includeCompleted: showCompleted });
+  const { data: goals } = useQuery({
+    ...convexQuery(api.goals.list, { includeCompleted: showCompleted }),
+    staleTime: STALE_TIME.SEMI_STATIC,
+  });
 
   if (!goals) {
     return <GoalsSkeleton />;

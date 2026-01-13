@@ -1,4 +1,6 @@
+import { convexQuery } from "@convex-dev/react-query";
 import { useForm, useStore } from "@tanstack/react-form";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { api } from "@tanstack-effect-convex/backend/convex/_generated/api";
 import type { Id } from "@tanstack-effect-convex/backend/convex/_generated/dataModel";
@@ -7,7 +9,6 @@ import {
   AuthLoading,
   Unauthenticated,
   useMutation,
-  useQuery,
 } from "convex/react";
 import { Schema } from "effect";
 import {
@@ -70,6 +71,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { STALE_TIME } from "@/lib/query";
 
 type TransactionType = "income" | "expense" | "transfer";
 
@@ -103,6 +105,7 @@ function TransactionIcon({ type }: { type: TransactionType }) {
 
 export const Route = createFileRoute("/transactions")({
   component: RouteComponent,
+  pendingComponent: TransactionsSkeleton,
 });
 
 function RouteComponent() {
@@ -153,12 +156,21 @@ function TransactionsContent() {
   >("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const transactions = useQuery(api.transactions.list, {
-    limit: 50,
-    ...(filter !== "all" && { type: filter }),
+  const { data: transactions } = useQuery({
+    ...convexQuery(api.transactions.list, {
+      limit: 50,
+      ...(filter !== "all" && { type: filter }),
+    }),
+    staleTime: STALE_TIME.DYNAMIC,
   });
-  const accounts = useQuery(api.accounts.list, {});
-  const categories = useQuery(api.categories.list);
+  const { data: accounts } = useQuery({
+    ...convexQuery(api.accounts.list, {}),
+    staleTime: STALE_TIME.SEMI_STATIC,
+  });
+  const { data: categories } = useQuery({
+    ...convexQuery(api.categories.list, {}),
+    staleTime: STALE_TIME.STATIC,
+  });
 
   // Only show full skeleton when accounts/categories are not loaded yet (initial load)
   if (!(accounts && categories)) {
@@ -506,7 +518,7 @@ function EditTransactionDialog({
                   }
                   value={field.state.value || undefined}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -734,7 +746,7 @@ function CreateTransactionDialog({
                   }
                   value={field.state.value || undefined}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select account" />
                   </SelectTrigger>
                   <SelectContent>
@@ -775,7 +787,7 @@ function CreateTransactionDialog({
                     }
                     value={field.state.value || undefined}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select destination account" />
                     </SelectTrigger>
                     <SelectContent>
@@ -811,7 +823,7 @@ function CreateTransactionDialog({
                   }
                   value={field.state.value || undefined}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>

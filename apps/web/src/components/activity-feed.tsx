@@ -1,5 +1,6 @@
+import { convexQuery } from "@convex-dev/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@tanstack-effect-convex/backend/convex/_generated/api";
-import { useQuery } from "convex/react";
 import {
   Activity,
   ArrowUpRight,
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatRelativeDate } from "@/lib/format";
+import { STALE_TIME } from "@/lib/query";
 
 function getActivityIcon(type: string, entityType: string): LucideIcon {
   if (type.startsWith("delete_")) {
@@ -78,7 +80,10 @@ function formatActivityDescription(description: string) {
 }
 
 export function ActivityPopover() {
-  const activities = useQuery(api.activities.get, { limit: 20 });
+  const { data: activities } = useQuery({
+    ...convexQuery(api.activities.get, { limit: 20 }),
+    staleTime: STALE_TIME.REALTIME,
+  });
 
   return (
     <Popover>

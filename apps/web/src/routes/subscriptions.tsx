@@ -1,4 +1,6 @@
+import { convexQuery } from "@convex-dev/react-query";
 import { useForm } from "@tanstack/react-form";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { api } from "@tanstack-effect-convex/backend/convex/_generated/api";
 import type { Id } from "@tanstack-effect-convex/backend/convex/_generated/dataModel";
@@ -7,7 +9,6 @@ import {
   AuthLoading,
   Unauthenticated,
   useMutation,
-  useQuery,
 } from "convex/react";
 import { Schema } from "effect";
 import {
@@ -54,6 +55,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { STALE_TIME } from "@/lib/query";
 
 type SubscriptionStatus = "active" | "paused" | "cancelled";
 
@@ -71,6 +73,7 @@ function getStatusBadgeVariant(
 
 export const Route = createFileRoute("/subscriptions")({
   component: RouteComponent,
+  pendingComponent: SubscriptionsSkeleton,
 });
 
 const FREQUENCIES = [
@@ -108,14 +111,29 @@ function RouteComponent() {
 }
 
 function SubscriptionsContent() {
-  const settings = useQuery(api.userSettings.getOrCreate);
-  const subscriptions = useQuery(api.subscriptions.list, {});
-  const totalMonthly = useQuery(
-    api.subscriptions.getTotalMonthly,
-    settings ? { baseCurrency: settings.baseCurrency } : "skip"
-  );
-  const accounts = useQuery(api.accounts.list, {});
-  const categories = useQuery(api.categories.list);
+  const { data: settings } = useQuery({
+    ...convexQuery(api.userSettings.getOrCreate, {}),
+    staleTime: STALE_TIME.STATIC,
+  });
+  const { data: subscriptions } = useQuery({
+    ...convexQuery(api.subscriptions.list, {}),
+    staleTime: STALE_TIME.SEMI_STATIC,
+  });
+  const { data: totalMonthly } = useQuery({
+    ...convexQuery(
+      api.subscriptions.getTotalMonthly,
+      settings ? { baseCurrency: settings.baseCurrency } : "skip"
+    ),
+    staleTime: STALE_TIME.SEMI_STATIC,
+  });
+  const { data: accounts } = useQuery({
+    ...convexQuery(api.accounts.list, {}),
+    staleTime: STALE_TIME.SEMI_STATIC,
+  });
+  const { data: categories } = useQuery({
+    ...convexQuery(api.categories.list, {}),
+    staleTime: STALE_TIME.STATIC,
+  });
 
   if (
     !(subscriptions && accounts && categories && settings) ||
@@ -455,7 +473,7 @@ function CreateSubscriptionDialog({
                   }
                   value={field.state.value || undefined}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select account" />
                   </SelectTrigger>
                   <SelectContent>
@@ -493,7 +511,7 @@ function CreateSubscriptionDialog({
                   }
                   value={field.state.value || undefined}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -566,7 +584,7 @@ function CreateSubscriptionDialog({
                     }
                     value={field.state.value}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select frequency" />
                     </SelectTrigger>
                     <SelectContent>

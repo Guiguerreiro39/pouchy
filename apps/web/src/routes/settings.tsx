@@ -1,3 +1,5 @@
+import { convexQuery } from "@convex-dev/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { api } from "@tanstack-effect-convex/backend/convex/_generated/api";
 import type { Id } from "@tanstack-effect-convex/backend/convex/_generated/dataModel";
@@ -6,7 +8,6 @@ import {
   AuthLoading,
   Unauthenticated,
   useMutation,
-  useQuery,
 } from "convex/react";
 import { Bell, DollarSign, Settings, Wallet } from "lucide-react";
 import { useState } from "react";
@@ -31,9 +32,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { STALE_TIME } from "@/lib/query";
 
 export const Route = createFileRoute("/settings")({
   component: RouteComponent,
+  pendingComponent: SettingsSkeleton,
 });
 
 const CURRENCIES = [
@@ -82,8 +85,14 @@ function RouteComponent() {
 }
 
 function SettingsContent() {
-  const settings = useQuery(api.userSettings.getOrCreate);
-  const accounts = useQuery(api.accounts.list, {});
+  const { data: settings } = useQuery({
+    ...convexQuery(api.userSettings.getOrCreate, {}),
+    staleTime: STALE_TIME.STATIC,
+  });
+  const { data: accounts } = useQuery({
+    ...convexQuery(api.accounts.list, {}),
+    staleTime: STALE_TIME.SEMI_STATIC,
+  });
   const updateSettings = useMutation(api.userSettings.update);
 
   if (!(settings && accounts)) {

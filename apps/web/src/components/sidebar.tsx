@@ -1,6 +1,8 @@
+import { convexQuery } from "@convex-dev/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { api } from "@tanstack-effect-convex/backend/convex/_generated/api";
-import { Authenticated, useQuery } from "convex/react";
+import { Authenticated } from "convex/react";
 import {
   CreditCard,
   LayoutDashboard,
@@ -15,6 +17,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { authClient } from "@/lib/auth-client";
+import { STALE_TIME } from "@/lib/query";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
 import {
@@ -146,7 +149,10 @@ export default function Sidebar() {
 }
 
 function SidebarUser() {
-  const user = useQuery(api.auth.getCurrentUser);
+  const { data: user } = useQuery({
+    ...convexQuery(api.auth.getCurrentUser, {}),
+    staleTime: STALE_TIME.STATIC,
+  });
 
   const initials = user?.name
     ? user.name

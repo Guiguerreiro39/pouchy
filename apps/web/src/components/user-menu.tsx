@@ -1,5 +1,6 @@
+import { convexQuery } from "@convex-dev/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { api } from "@tanstack-effect-convex/backend/convex/_generated/api";
-import { useQuery } from "convex/react";
 
 import {
   DropdownMenu,
@@ -11,11 +12,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
+import { STALE_TIME } from "@/lib/query";
 
 import { Button } from "./ui/button";
 
 export default function UserMenu() {
-  const user = useQuery(api.auth.getCurrentUser);
+  const { data: user } = useQuery({
+    ...convexQuery(api.auth.getCurrentUser, {}),
+    staleTime: STALE_TIME.STATIC,
+  });
 
   return (
     <DropdownMenu>

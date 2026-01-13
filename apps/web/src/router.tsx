@@ -21,6 +21,7 @@ export function getRouter() {
       queries: {
         queryKeyHashFn: convexQueryClient.hashFn(),
         queryFn: convexQueryClient.queryFn(),
+        staleTime: 5 * 60 * 1000, // 5 minutes default
       },
     },
   });
@@ -29,6 +30,8 @@ export function getRouter() {
   const router = createTanStackRouter({
     routeTree,
     defaultPreload: "intent",
+    defaultPendingMs: 0,
+    defaultPendingMinMs: 50,
     defaultPendingComponent: () => <Loader />,
     defaultNotFoundComponent: () => <div>Not Found</div>,
     context: { queryClient, convexQueryClient },

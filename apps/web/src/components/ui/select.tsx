@@ -5,7 +5,7 @@ import {
   type SelectRootProps,
 } from "@base-ui/react/select";
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react";
-import type * as React from "react";
+import { createContext, useContext } from "react";
 import { cn } from "@/lib/utils";
 
 interface SelectItemData {
@@ -17,11 +17,17 @@ interface SelectProps extends SelectRootProps<string, false> {
   items?: SelectItemData[] | Record<string, React.ReactNode>;
 }
 
+const SelectItemsContext = createContext<
+  SelectItemData[] | Record<string, React.ReactNode> | undefined
+>(undefined);
+
 function Select({ items, children, ...props }: SelectProps) {
   return (
-    <SelectPrimitive.Root items={items} {...props}>
-      {children}
-    </SelectPrimitive.Root>
+    <SelectItemsContext.Provider value={items}>
+      <SelectPrimitive.Root items={items} {...props}>
+        {children}
+      </SelectPrimitive.Root>
+    </SelectItemsContext.Provider>
   );
 }
 
@@ -42,13 +48,30 @@ function SelectValue({
 }: Omit<React.ComponentProps<typeof SelectPrimitive.Value>, "children"> & {
   placeholder?: string;
 }) {
+  const items = useContext(SelectItemsContext);
+
+  const getLabel = (value: string | null) => {
+    if (value == null || value === "") {
+      return placeholder;
+    }
+    if (!items) {
+      return value;
+    }
+    if (Array.isArray(items)) {
+      const item = items.find((i) => i.value === value);
+      return item?.label ?? value;
+    }
+    return items[value] ?? value;
+  };
+
   return (
     <SelectPrimitive.Value
       className={cn("flex flex-1 text-left", className)}
       data-slot="select-value"
       {...(props as React.ComponentProps<typeof SelectPrimitive.Value>)}
-      {...(placeholder && { placeholder })}
-    />
+    >
+      {(value) => getLabel(value)}
+    </SelectPrimitive.Value>
   );
 }
 

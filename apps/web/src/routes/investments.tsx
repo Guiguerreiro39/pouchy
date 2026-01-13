@@ -1,4 +1,6 @@
+import { convexQuery } from "@convex-dev/react-query";
 import { useForm } from "@tanstack/react-form";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { api } from "@tanstack-effect-convex/backend/convex/_generated/api";
 import type { Id } from "@tanstack-effect-convex/backend/convex/_generated/dataModel";
@@ -7,7 +9,6 @@ import {
   AuthLoading,
   Unauthenticated,
   useMutation,
-  useQuery,
 } from "convex/react";
 import { Schema } from "effect";
 import {
@@ -58,9 +59,11 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, formatPercent } from "@/lib/format";
+import { STALE_TIME } from "@/lib/query";
 
 export const Route = createFileRoute("/investments")({
   component: RouteComponent,
+  pendingComponent: InvestmentsSkeleton,
 });
 
 const INVESTMENT_TYPES = [
@@ -100,11 +103,17 @@ function RouteComponent() {
 }
 
 function InvestmentsContent() {
-  const settings = useQuery(api.userSettings.getOrCreate);
-  const portfolio = useQuery(
-    api.investments.getPortfolioSummary,
-    settings ? { baseCurrency: settings.baseCurrency } : "skip"
-  );
+  const { data: settings } = useQuery({
+    ...convexQuery(api.userSettings.getOrCreate, {}),
+    staleTime: STALE_TIME.STATIC,
+  });
+  const { data: portfolio } = useQuery({
+    ...convexQuery(
+      api.investments.getPortfolioSummary,
+      settings ? { baseCurrency: settings.baseCurrency } : "skip"
+    ),
+    staleTime: STALE_TIME.DYNAMIC,
+  });
 
   if (!(portfolio && settings)) {
     return <InvestmentsSkeleton />;
@@ -321,6 +330,7 @@ const InvestmentFormSchema = Schema.Struct({
     Schema.minLength(1, { message: () => "Purchase price is required" })
   ),
   currentPrice: Schema.String,
+  currency: Schema.String,
   purchaseDate: Schema.String.pipe(
     Schema.minLength(1, { message: () => "Purchase date is required" })
   ),
@@ -344,7 +354,14 @@ function CreateInvestmentDialog({ children }: { children?: React.ReactNode }) {
   const form = useForm({
     defaultValues: {
       name: "",
-      type: "stock" as const,
+      type: "stock" as
+        | "stock"
+        | "etf"
+        | "crypto"
+        | "mutual_fund"
+        | "bond"
+        | "real_estate"
+        | "other",
       symbol: "",
       quantity: "",
       purchasePrice: "",
@@ -470,7 +487,7 @@ function CreateInvestmentDialog({ children }: { children?: React.ReactNode }) {
                     }
                     value={field.state.value}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select investment type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -490,13 +507,13 @@ function CreateInvestmentDialog({ children }: { children?: React.ReactNode }) {
                 <div className="space-y-2">
                   <Label htmlFor="currency">Currency</Label>
                   <Select
-                    items={CURRENCIES}
+                    items={[...CURRENCIES]}
                     onValueChange={(val: string | null) =>
                       val && field.handleChange(val)
                     }
                     value={field.state.value}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select currency" />
                     </SelectTrigger>
                     <SelectContent>

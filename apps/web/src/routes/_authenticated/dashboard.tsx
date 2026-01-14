@@ -4,10 +4,8 @@ import {
   DashboardPage,
   DashboardPageSkeleton,
 } from "@/pages/dashboard/ui/dashboard-page";
-import { requireAuth } from "@/shared/lib/auth/require-auth";
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute("/_authenticated/dashboard")({
   component: DashboardPage,
   pendingComponent: DashboardPageSkeleton,
-  beforeLoad: requireAuth,
 });

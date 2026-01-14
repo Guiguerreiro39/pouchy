@@ -4,10 +4,8 @@ import {
   SubscriptionsPage,
   SubscriptionsPageSkeleton,
 } from "@/pages/subscriptions/ui/subscriptions-page";
-import { requireAuth } from "@/shared/lib/auth/require-auth";
 
-export const Route = createFileRoute("/subscriptions")({
+export const Route = createFileRoute("/_authenticated/subscriptions")({
   component: SubscriptionsPage,
   pendingComponent: SubscriptionsPageSkeleton,
-  beforeLoad: requireAuth,
 });

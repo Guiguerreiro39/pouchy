@@ -12,6 +12,10 @@ This is a typescript project that uses tanstack start, convex and effect.
 - Use http://localhost:3001 to access the application
 - Always use Feature-Sliced Design (FSD) Structure (design-pattern.md) when creating new features
 
+## Plan mode
+
+- Always follow the approach explained in **/plans/README.md**
+
 ## Project Structure
 
 This is a monorepo with the following structure:

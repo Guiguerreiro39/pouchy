@@ -4,10 +4,8 @@ import {
   TransactionsPage,
   TransactionsPageSkeleton,
 } from "@/pages/transactions/ui/transactions-page";
-import { requireAuth } from "@/shared/lib/auth/require-auth";
 
-export const Route = createFileRoute("/transactions")({
+export const Route = createFileRoute("/_authenticated/transactions")({
   component: TransactionsPage,
   pendingComponent: TransactionsPageSkeleton,
-  beforeLoad: requireAuth,
 });

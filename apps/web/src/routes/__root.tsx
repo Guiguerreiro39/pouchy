@@ -7,15 +7,12 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
-import { Authenticated } from "convex/react";
 import { ConvexProvider } from "@/app/providers/convex-provider";
 import { QueryProvider } from "@/app/providers/query-provider";
 import appCss from "@/app/styles/index.css?url";
 import type { RouterAppContext } from "@/app/types/router-app-context";
 import { getToken } from "@/shared/config/auth-server";
 import { Toaster } from "@/shared/ui/sonner";
-import { Navbar } from "@/widgets/navbar/ui/navbar";
-import { Sidebar } from "@/widgets/sidebar/ui/sidebar";
 
 const getAuth = createServerFn({ method: "GET" }).handler(async () => {
   return await getToken();
@@ -73,18 +70,7 @@ function RootDocument() {
             <HeadContent />
           </head>
           <body>
-            <div className="flex h-svh">
-              {/* Only show sidebar when authenticated, avoiding the "useless sidebar" on login */}
-              <Authenticated>
-                <Sidebar />
-              </Authenticated>
-              <main className="flex flex-1 flex-col overflow-hidden">
-                <Navbar />
-                <div className="flex-1 overflow-auto">
-                  <Outlet />
-                </div>
-              </main>
-            </div>
+            <Outlet />
             <Toaster richColors />
             <TanStackRouterDevtools position="bottom-left" />
             <Scripts />

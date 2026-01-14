@@ -38,6 +38,8 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 - Prefer template literals over string concatenation
 - Use destructuring for object and array assignments
 - Use `const` by default, `let` only when reassignment is needed, never `var`
+- Don't use nested tertiaries
+- Use block statements
 
 ### Async & Promises
 
@@ -54,6 +56,7 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 - Use the `key` prop for elements in iterables (prefer unique IDs over array indices)
 - Nest children between opening and closing tags instead of passing as props
 - Don't define components inside other components
+- Don't use nested tertiaries. Instead use an arrow function inside the tsx
 - Use semantic HTML and ARIA attributes for accessibility:
   - Provide meaningful alt text for images
   - Use proper heading hierarchy

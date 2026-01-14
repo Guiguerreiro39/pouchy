@@ -1,6 +1,3 @@
-import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
-import type { ConvexQueryClient } from "@convex-dev/react-query";
-import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   createRootRouteWithContext,
   HeadContent,
@@ -11,21 +8,21 @@ import {
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
 import { Authenticated } from "convex/react";
-import { Navbar } from "@/components/navbar";
-import { Toaster } from "@/components/ui/sonner";
-import { authClient } from "@/lib/auth-client";
-import { getToken } from "@/lib/auth-server";
-import Sidebar from "../components/sidebar";
-import appCss from "../index.css?url";
+import { ConvexProvider } from "@/app/providers/convex-provider";
+import { QueryProvider } from "@/app/providers/query-provider";
+import appCss from "@/app/styles/index.css?url";
+import type { RouterAppContext } from "@/app/types/router-app-context";
+import { getToken } from "@/shared/config/auth-server";
+import { Toaster } from "@/shared/ui/sonner";
+import { Navbar } from "@/widgets/navbar/ui/navbar";
+import { Sidebar } from "@/widgets/sidebar/ui/sidebar";
 
 const getAuth = createServerFn({ method: "GET" }).handler(async () => {
   return await getToken();
 });
 
-export interface RouterAppContext {
-  queryClient: QueryClient;
-  convexQueryClient: ConvexQueryClient;
-}
+// Re-export for other routes that may need it
+export type { RouterAppContext } from "@/app/types/router-app-context";
 
 export const Route = createRootRouteWithContext<RouterAppContext>()({
   head: () => ({
@@ -66,12 +63,11 @@ function RootDocument() {
   const context = useRouteContext({ from: Route.id });
 
   return (
-    <ConvexBetterAuthProvider
-      authClient={authClient}
+    <ConvexProvider
       client={context.convexQueryClient.convexClient}
       initialToken={context.token ?? null}
     >
-      <QueryClientProvider client={context.queryClient}>
+      <QueryProvider client={context.queryClient}>
         <html lang="en">
           <head>
             <HeadContent />
@@ -94,7 +90,7 @@ function RootDocument() {
             <Scripts />
           </body>
         </html>
-      </QueryClientProvider>
-    </ConvexBetterAuthProvider>
+      </QueryProvider>
+    </ConvexProvider>
   );
 }

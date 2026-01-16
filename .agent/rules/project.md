@@ -1,5 +1,5 @@
 ---
-trigger: glob
+trigger: always_on
 globs: **/*.{ts,tsx,js,jsx,json,jsonc,html,vue,svelte,astro,css,yaml,yml,graphql,gql,md,mdx,grit}
 ---
 

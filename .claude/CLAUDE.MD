@@ -1,86 +1,65 @@
 ---
-trigger: glob
-globs: **/*.{ts,tsx,js,jsx,json,jsonc,html,vue,svelte,astro,css,yaml,yml,graphql,gql,md,mdx,grit}
+trigger: always_on
 ---
 
-# Project Rules
+---
 
-This is a typescript project that uses tanstack start, convex and effect.
+**role**: Senior Full-Stack Engineer (Effect/Convex/React Specialist)
+**architecture**: Monorepo (Turborepo + pnpm)
+**pattern**: Feature-Sliced Design (FSD)
+**logic_engine**: Effect.ts (Strict)
+**validation**: Effect Schema (StandardSchemaV1)
 
-## Development mode
+---
 
-- Use http://localhost:3001 to access the application
-- Always use Feature-Sliced Design (FSD) Structure (design-pattern.md) when creating new features
+## CRITICAL DIRECTIVES
 
-## Project Structure
+1. **Validation**: Use **ONLY** `Effect Schema`. Never use Zod or Valibot.
+   - _Tanstack Forms_: Wrap schemas in `Schema.standardSchemaV1` before defining the main form schema.
+2. **Error Handling**: **NEVER** use `throw`. Use `Effect.fail` with TaggedErrors from `packages/backend/convex/schemas/errors.ts`.
+3. **Logging**: Use `Console` from Effect instead of native `console`. Provide concise, valuable logs for every endpoint.
+4. **Context**: Use `context7` MCP for all documentation lookups before coding.
 
-This is a monorepo with the following structure:
+## PROJECT TOPOGRAPHY
 
-- **`apps/web/`** - Tanstack start frontend application
+- **Web App**: `apps/web/` (Tanstack Start + Effect Atom + shadcn/ui + BaseUI).
+- **Backend**: `packages/backend/` (Convex + Confect).
+- **Auth**: Convex Auth (frontend) & `packages/backend/convex/lib/policies.ts` (backend/policies).
+- **Dev URL**: `http://localhost:3001`
 
-- **`packages/backend/`** - Convex backend functions with confect to seamingly integrate convex with effect.
+## WORKFLOW MODES
 
-## Available Scripts
+### **Plan Mode**
 
-- `pnpm run dev` - Start all apps in development mode
-- `pnpm run dev:web` - Start only the web app
-- `pnpm run dev:server` - Start only the backend
-- `pnpm run format` - Format documents
+- **Requirement**: You MUST follow the process in `/specs/README.md` before generating code.
 
-## Authentication
+### **Development Mode**
 
-Authentication is enabled in this project. Use convex authentication functions in the frontend and policies inside `packages/backend/convex/lib/policies.ts` for the backend.
+- **Structure**: New features MUST follow **Feature-Sliced Design (FSD)** per `design-pattern.md`.
+- **Reference**: Search `~/.local/share/effect` and `~/.local/share/effect-atom` to find API usage and implementation
+  details for Effect and Effect-Atom.
+- **Pre-flight**: Run `effect-solutions list` before implementing new Effect features.
 
-## Forms, validation and types
+## COMMAND PALETTE (pnpm only)
 
-- Avoid using anything other than **Effect Schema** for validation and typing.
-- This project uses tanstack forms. When dealing with forms, use `Schema.standardSchemaV1` before defining the main form schema for compability.
+- **Start All**: `pnpm run dev`
+- **Web Only**: `pnpm run dev:web`
+- **Backend Only**: `pnpm run dev:server`
+- **Format**: `pnpm run format`
 
-## Key Points
+---
 
-- This is a Turborepo monorepo using pnpm workspaces
-- Each app has its own `package.json` and dependencies
-- Run commands from the root to execute across all workspaces
-- Run workspace-specific commands with `pnpm run command-name`
-- Turborepo handles build caching and parallel execution
-- Use pnpm instead of npm for commands
+**Verification**: Before completing a task, verify against these rules. If the implementation violates FSD or uses native Errors instead of TaggedErrors, rewrite it.
 
-## Effect Best Practices
+## RULE COMPLIANCE CHECKLIST
 
-**Before implementing Effect features**, run `effect-solutions list` and read the relevant guide.
+> Before delivering code, verify the following points:
 
-Topics include: services and layers, data modeling, error handling, configuration, testing, HTTP clients, CLIs, observability, and project structure.
-
-**Effect Source Reference:** `~/.local/share/effect`
-**Effect Atom Source Reference:** `~/.local/share/effect-atom`
-Search here to explore APIs, find usage examples, and understand implementation details when the documentation isn't enough.
-
-### Error handling
-
-- Check the TaggedErrors in /packages/backend/convex/schemas/errors.ts for the possible errors.
-- Never throw inside an effect, always Effect.fail with the appropriate error.
-- When using Convex, always check for errors and handle them gracefully.
-
-### Logging
-
-- Use Console from effect instead of console
-- Do a concise but valuable logging on each endpoint
-
-## Documentation
-
-- Use context7 mcp for up to date documentation.
-
-## Testing
-
-- Use playwright mcp for testing the UI.
-
-## Frontend
-
-- Use shadcn/ui with BaseUI for UI components
-- Use TailwindCSS for styling
-- Use Effect Atom for global state management
-
-## Backend
-
-- Use Convex for the database
-- Use Better-auth with convex for authentication
+- [ ] **Architecture**: Does this follow Feature-Sliced Design (FSD)? (if applicable, only frontend)
+- [ ] **Logic**: Is this using `Effect` for all logic/flow control?
+- [ ] **Validation**: Is `Effect Schema` used exclusively? (If Tanstack Form: is `standardSchemaV1` applied?)
+- [ ] **Error Handling**: Are there zero `throws`? Are `TaggedErrors` used with `Effect.fail`?
+- [ ] **Logging**: Is `Console` (from Effect) used instead of `console`?
+- [ ] **Auth**: Are backend policies updated in `packages/backend/convex/lib/policies.ts`?
+- [ ] **Documentation**: Have I consulted `context7` or the local Effect source (`~/.local/share/effect`)? (if applicable)
+- [ ] **Package Manager**: Are all suggested commands using `pnpm`?
